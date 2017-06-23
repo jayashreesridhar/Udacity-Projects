@@ -1,0 +1,486 @@
+---
+title: "Prosper_Loan_Data_Udacity"
+author: "Jayashree"
+date: "4 May 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message=FALSE, warning=FALSE)
+```
+
+## Prosper Loan Data
+Load the csv file in to working directory
+```{r}
+getwd()
+setwd('C:/Users/JAYASHREE/Desktop/Data Analyst Nanodegree/EDA/Project')
+loan <- read.csv('prosperLoanData.csv',na.strings = c("","NA"))
+summary(loan)
+```
+
+## Univariate Analysis
+
+### Loan Amount
+Let us analyse the loan amount taken by customers.We will plot the histogram to 
+look at the distribution.
+```{r}
+library(ggplot2)
+qplot(LoanOriginalAmount,data=loan,binwidth=700,color=I('black'),fill=I('#F79420'))
+```
+
+
+We could see from the plot that the distribution is positively skewed.Let us see
+the summary statistics of the loan amount.
+
+```{r}
+summary(loan$LoanOriginal)
+```
+
+Let us take log transformation of Loan Amount and see the distribution
+```{r}
+qplot(LoanOriginalAmount,data=loan,color=I('black'),fill=I('#F79420'))+scale_x_log10()
+```
+
+The plot shows that the count of loan amount is bimodal peaking at around 7000 
+and again at around 11000.
+
+### Term
+
+Let us take a look at the term column.We will plot a bar graph to understand the
+distribution of the variable.
+```{r}
+length(unique(loan$Term))
+ggplot(aes(factor(Term)),data=loan)+geom_bar(color=I('blue'),fill=I('red'),stat='count')+
+  xlab('Term')
+```
+
+
+```{r}
+table(loan$Term)
+```
+
+### Income Range
+Let us look at the distribution of income range of borrowers.
+
+```{r}
+ggplot(aes(IncomeRange),data=loan)+geom_bar(color='blue',fill='pink')+
+  theme(axis.text.x = element_text(size  = 10,
+                            angle = 45,
+                            hjust = 1,
+                            vjust = 1))
+```
+
+From the plot we could see that income range are not arranged in ascending 
+order.Let us make the income range as ordered variable.
+
+```{r}
+loan$IncomeRange <- ordered(loan$IncomeRange,levels=c("$0","$1-24,999","$25,000-49,999","$50,000-74,999",
+                                                      "$75,000-99,999","$100,000+","Not displayed","Not employed"))
+ggplot(aes(IncomeRange),data=loan)+geom_bar(color='blue',fill='violet')+
+  theme(axis.text.x =  element_text(size  = 10,
+                            angle = 45,
+                            hjust = 1,
+                            vjust = 1))
+```
+
+Most of the borrowers are in $25000-49999 Income range,closely followed by 
+50,000-74999 range.
+
+### Listing Category
+Let us find out the purpose for which the borrowers have taken a loan.
+```{r}
+table(loan$ListingCategory)
+```
+
+We could see that for Category 1-Debt Consolidation,many borrowers have taken 
+loan.
+
+### Employment status
+Let us look at the employment status of the borrowers.
+```{r}
+ggplot(aes(EmploymentStatus),data=subset(loan,!is.na(EmploymentStatus)))+geom_bar(color='black',fill='green')
+```
+
+Let us take log transformation of count so that lower values are visible
+
+```{r}
+ggplot(aes(EmploymentStatus),data=subset(loan,!is.na(EmploymentStatus)))+geom_bar(color='black',fill='green')+
+  scale_y_log10()
+
+```
+
+### Unique borrowers in the dataset
+Let us find how many unique borrowers are in the dataset.
+```{r}
+length(unique(loan$MemberKey))
+
+```
+
+Let us compute the percentage of first time borrowers
+```{r}
+length(unique(loan$MemberKey))/length(loan$MemberKey)
+```
+
+79.7 % of borrowers in the dataset are first time borrowers.
+
+### LoanOriginationQuarter
+Let us look at the loan origination quarter for borrowers.
+
+```{r}
+originationQuart <- substr(loan$LoanOriginationQuarter,1,2)
+```
+Let us find out in which quarter loans have originated the most.
+
+```{r}
+ggplot(aes(x=originationQuart),data=loan)+geom_bar(color = 'black', fill = '#099DD9',stat='count')
+```
+
+As seen from the plot most loans have originated in the 4th quarter.
+
+### LoanOriginationDate
+Let us look at the ditribution of origination of loans across days of the 
+month.
+```{r}
+originationDay <- format(as.Date(loan$LoanOriginationDate,format="%Y-%m-%d"), "%d")
+```
+
+Let us plot bar graph to find the distribution of origination of loan across 
+days of the month.
+```{r}
+ggplot(aes(originationDay),data=loan)+geom_bar(color = 'black', fill = '#088AD9',stat='count')
+```
+
+Most loans have originated in 30th of every month.
+
+### Borrower State
+Let us take a look at the distribution of states of the borowers from where they
+have originated.
+```{r}
+ggplot(aes(BorrowerState),data=loan)+geom_bar(stat='count')+
+  theme(axis.text.x = element_text(size  = 10,
+                            angle = 90,
+                            hjust = 1,
+                            vjust = 1))
+```
+
+From the plot we could see that state of California has highest number of
+borrowers.
+
+### CurrentlyInGroup
+Let us check the proportion of borrowers who are currenty in a group.
+```{r}
+ggplot(aes(CurrentlyInGroup),data=loan)+geom_bar(color='black',fill='blue')
+```
+
+We could see from the plot that  less than 1/4th of the borrowers are currently
+in a group.
+
+### StatedMonthlyIncome
+
+Let us look at the summary statistics of the monthly income
+
+```{r}
+summary(loan$StatedMonthlyIncome)
+```
+We could see a huge difference between value in 3rd quartile and maximum value.
+This shows the presence of outliers.
+
+
+Let us look at the distribution of statedMontlyIncome of the borrowers within 
+3rd quartile.
+```{r}
+ggplot(aes(StatedMonthlyIncome),data=loan)+geom_histogram(binwidth=500,color='black',fill='purple')+
+  scale_x_continuous(limits=c(0,7000))
+```
+
+From the plot we could see that distribution is nearly normal.
+
+### IsBorrowerHomeOwner
+
+Let us look at the distribution of home ownership of borrowers.
+```{r}
+table(loan$IsBorrowerHomeowner)
+ggplot(aes(x=IsBorrowerHomeowner),data=loan)+geom_bar(color='red',fill='yellow')
+```
+
+Borrowers with home ownership are slightly higher than borrowers without home 
+ownership.
+## Bi-variate Analysis
+
+### StatedMonthlyIncome Vs LoanOriginalAmount
+Let us find if monthly income of the borrower has an impact on his loan amount.
+```{r}
+ggplot(aes(x=LoanOriginalAmount,y=StatedMonthlyIncome),data=loan)+geom_point()
+```
+
+In the above figure,data points are concentrated near the x-axis,so we shall 
+limit the y-axis values to take a closer look at the data points.
+
+```{r}
+ggplot(aes(x=LoanOriginalAmount,y=StatedMonthlyIncome),data=loan)+geom_jitter(alpha=1/20,position='jitter')+
+  scale_y_continuous(limits=c(0,50000))+geom_smooth(method=lm)
+```
+
+
+From the figure we could not find a linear relationship.Let us compute 
+correlation coefficient and see what it tells about the strength between loan 
+amount and monthly salary.
+
+```{r}
+with(data=loan,cor.test(LoanOriginalAmount,StatedMonthlyIncome))
+```
+
+### Employment Status vs Loan Amount
+I assume that  Employed people are eligible for higher loan amount than other 
+category of people.Let us plot the relation between these 2 variables to find 
+whether my assumptions hold right.
+```{r}
+ggplot(aes(x=EmploymentStatus,y=LoanOriginalAmount),data=subset(loan,!is.na(EmploymentStatus)))+geom_boxplot()
+```
+
+My assumptions holds true that Employed persons get higher loan amount.
+Let us look at the summary statistics for each employment group.
+```{r}
+by(loan$LoanOriginalAmount,loan$EmploymentStatus,summary)
+```
+
+### Let us the see the proportion of borrower home owner
+```{r}
+table(loan$IsBorrowerHomeowner)
+```
+
+I assume that the loan amount will be higher for the borrower with home.Let us 
+find out if my assumption is right by plotting a frequency polygon.
+
+```{r}
+ggplot(aes(x = LoanOriginalAmount, y = ..count../sum(..count..)), data = loan) + 
+  geom_freqpoly(aes(color =IsBorrowerHomeowner)) + 
+  scale_x_continuous(breaks=seq(0,36000,5000))+
+  xlab('Loan Amount') + 
+  ylab('Percentage of borrowers with that loan amount')
+```
+
+
+From the plot we could see that for lower amounts of loan amount the percentage 
+of borrowers without home ownership is higher but as the loan amount increases 
+home owner borrower has higher percentage of loan amount.
+
+### Employment status vs Amount delinquent
+Let us find the distribution of amount delinquent for various categories of 
+employment status.
+```{r}
+ggplot(aes(y=AmountDelinquent,x=EmploymentStatus),data=subset(loan,!is.na(EmploymentStatus)))+geom_bar(stat='identity')
+```
+
+From the plot we could infer that Employed borrowers has high amount delinquent.
+
+### Employment status Duration vs Amount Delinquent
+Let us look at the relationship of amount delinquent to the number of months 
+the borrower was employed.
+```{r}
+ggplot(aes(x=EmploymentStatusDuration,y=AmountDelinquent),data=loan)+geom_point()
+```
+
+From the plot we could infer that the lesser the number of months employed,the 
+higher is the amount delinquent.Since data points are concentrated at the bottom
+lets change the scale for y axis to get clear view of data.
+
+```{r}
+ggplot(aes(x=EmploymentStatusDuration,y=AmountDelinquent),data=loan)+
+  geom_jitter(alpha=1/6,position='jitter')+scale_y_continuous(limits=c(0,200000))+
+  geom_smooth(method=lm)+scale_y_log10()
+```
+
+Let us find the correlation between these 2 variables
+```{r}
+with(loan,cor.test(EmploymentStatusDuration,AmountDelinquent))
+```
+
+We could see from the correlation coefficient that both the vairables are 
+weakly related.
+
+### InvestmentFromFriendsCount vs InvestmentFromFriendsAmount
+I assume that as more friends chips in the amount collected will be high.Let us 
+see if that assumption is correct.
+```{r}
+ggplot(aes(x=InvestmentFromFriendsCount,y=InvestmentFromFriendsAmount),data=loan)+geom_jitter()+
+  geom_smooth(method=lm)
+```
+
+From the plot we could see that my assumption is wrong.There is no strong 
+relationship between friends count and friends amount.
+
+```{r}
+table(loan$InvestmentFromFriendsCount)
+```
+
+Only few borrowers have friends chiped in to lend the loan.
+
+```{r}
+by(loan$InvestmentFromFriendsAmount,loan$InvestmentFromFriendsCount,summary)
+```
+
+###  Employment status vs Investors
+Let us look at the distribution of investors who have lended the loan.
+
+```{r}
+ggplot(aes(x=EmploymentStatus,y=Investors),data=subset(loan,!is.na(EmploymentStatus)))+
+  geom_bar(stat='identity',color=I('blue'))
+```
+
+As seen from the plot investors are funding high for employed borrowers.
+
+
+## Multivariate Analysis
+
+### Monthly Income vs Loan Amount based on Employment Status
+
+Let us look at plot of monthly income vs loan amount sanctioned for each
+category of employed persons.
+```{r}
+ggplot(aes(x=LoanOriginalAmount,y=StatedMonthlyIncome),data=subset(loan, !is.na(EmploymentStatus) ))+geom_point(color=I('#F79420'),alpha=1/10)+  scale_y_continuous(limits=c(0,50000))+facet_wrap(~EmploymentStatus)+
+  geom_smooth(method=lm)
+```
+
+Full time Employed persons have higher salary and hence higher loan amount.
+
+### CurrentDelinquencies vs loan amount for various categories of 
+### Employmentstatus
+Let us calculate median loan amount for borrowers who have current delinquencies
+for varied category of employment status.
+
+```{r}
+ggplot(aes(x=CurrentDelinquencies,y=LoanOriginalAmount),data=subset(loan,!is.na(EmploymentStatus)))+
+  geom_smooth(aes(color=EmploymentStatus),method ="lm", formula = y ~ x+I(x^2), size = 1 )+scale_color_brewer(type='qual')  
+  
+```
+
+Employed borrowers have less number of delinquency compared to other category of
+borrowers.
+
+### Borrowers APR vs Borrower Rate based on Term
+
+Let us find if term of loan impact the interest rate and Annual Percentage Rate
+
+```{r}
+
+ggplot(aes(x = BorrowerAPR,y = BorrowerRate  , color = factor(Term)), data = loan) +
+      geom_point(alpha = 0.8, size = 1) +
+      geom_smooth(method = "lm", se = FALSE,size=1)  +
+      scale_color_brewer(type='seq', guide=guide_legend(title='Quality'))
+```
+
+As term increases,borrower APR increases with borrower interest rate forming a 
+linear relationship.Let us look at the correlation coefficient.
+
+```{r}
+with(loan,cor.test(BorrowerAPR,BorrowerRate))
+```
+
+This shows that both the variables have strong linear relationship.
+
+### Income Range vs Stated Monthly Income based on Income verifiable
+
+Let us look at the distribution of montly income of borrowers based on their 
+income range and verificaton of income.
+
+```{r}
+ggplot(aes(x=IncomeRange,y=StatedMonthlyIncome, fill = IncomeVerifiable),data=loan)+
+  geom_boxplot( )+scale_y_log10() +
+  theme(axis.text.x =  element_text(size  = 10,
+                            angle = 45,
+                            hjust = 1,
+                            vjust = 1))
+```
+
+The plot shows that only few borrowers have given information about verification
+of income.
+
+## Final Plots and Summaries
+
+### Plot One
+
+#### Employment Status vs Loan Original Amount
+
+Loan Amount is highly influenced by employment status of the borrower.Full time 
+employed borrowers earn higher loan amount compared to other categories of 
+borrowers.
+
+```{r}
+ggplot(aes(x=EmploymentStatus,y=LoanOriginalAmount),data=subset(loan,!is.na(EmploymentStatus)))+geom_boxplot()+
+  ylab('Loan Original Amount [USD]')+ggtitle('Employment Status vs Loan Original Amount')
+```
+
+The boxplot shows that the median loan amount for employed borrowers are higher.
+Also lots of outliers are present for full-time and not available category of
+borrowers.Let us look at the summary statistics for the plot.
+
+```{r}
+by(loan$LoanOriginalAmount,loan$EmploymentStatus,summary)
+
+```
+
+I have chose this plot as this shows clear trend.
+
+### Plot Two
+
+#### Percentage of home owners vs Loan Original Amount
+
+For lower amounts of loan home ownership is not a major influencing factor.But 
+for higher loan amount,home ownership becomes an important factor.This may be 
+due to the reason that house document can be mortaged incase of failure to repay
+the loan.
+
+```{r}
+ggplot(aes(x = LoanOriginalAmount, y = ..count../sum(..count..)), data = loan) + 
+  geom_freqpoly(aes(color =IsBorrowerHomeowner)) + 
+  scale_x_continuous(breaks=seq(0,36000,5000))+
+  xlab('Loan Original Amount [USD]') + 
+  ylab('Percentage of borrowers with that loan amount')+
+  ggtitle('Percentage of Home Owners with respect to Loan Amount (%)')
+```
+
+Let us look at the proportion of home owners in the dataset.
+
+```{r}
+table(loan$IsBorrowerHomeowner)
+```
+
+
+
+### Plot Three
+
+#### Borrowers APR vs Borrower Rate based on Term
+
+As term increases there is a linear relationship between Borrower APR and 
+Borrower Rate.
+
+```{r}
+ggplot(aes(x = BorrowerAPR,y = BorrowerRate  , color = factor(Term)), data = loan) +
+      geom_point(alpha = 0.8, size = 1) +
+      geom_smooth(method = "lm", se = FALSE,size=1)  +
+      scale_color_brewer(type='seq', guide=guide_legend(title='Quality'))+
+  ggtitle('Borrower APR vs Borrower Rate based on Term')+
+  xlab('Borrower APR (%)')+
+  ylab('Borrower Rate (%)')
+
+```
+
+Let us calculate correlation coefficient to check for linearity.
+
+```{r}
+with(loan,cor.test(BorrowerAPR,BorrowerRate))
+```
+
+The values shows that both the variables have strong linear relationship.
+
+
+## Reflection
+
+Prosper Loan dataset is a huge dataset of more tha 1 lakh data.As I explored the
+data,I found success in finding pattern of loan amount based on employment 
+status and home ownership.I found difficult to choose the variables to explore
+as there are 81 of them containing varied and vast information.I have analysed 
+around 20 variables.There is a lot of scope in taking this project forward.
+All the variables can be analysed and plotted to check for the trend and model
+can be built.
